@@ -15,23 +15,23 @@ type Handler struct {
 // with name like "Action"+"Version", Action and Version needed be
 // given in context as query params. And you can use "doResp" to
 // decide how to process the response when a error happened
-func MainHandler(doResp func(c *gin.Context, err error)) func(*gin.Context) {
+func MainHandler(doErrResp func(c *gin.Context, err error)) func(*gin.Context) {
 	return func(c *gin.Context) {
 		action, ok := c.GetQuery("Action")
 		if !ok {
-			doResp(c, errors.New("no action"))
+			doErrResp(c, errors.New("no action"))
 			c.Abort()
 		}
 		version, ok := c.GetQuery("Version")
 		if !ok {
-			doResp(c, errors.New("no version"))
+			doErrResp(c, errors.New("no version"))
 			c.Abort()
 		}
 		h := Handler{}
 		hv := reflect.ValueOf(h)
 		f := hv.MethodByName(action + version)
 		if !f.IsValid() {
-			doResp(c, errors.New("no such api"))
+			doErrResp(c, errors.New("no such api"))
 			c.Abort()
 		} else {
 			f.Call([]reflect.Value{reflect.ValueOf(c)})
