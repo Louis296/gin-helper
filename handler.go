@@ -6,16 +6,12 @@ import (
 	"reflect"
 )
 
-// Handler is a func receiver. When a func need to be a handler, assign it as Handler's
-// public method
-type Handler struct {
-}
-
 // MainHandler will return a handler that could router request to a func
 // with name like "Action"+"Version", Action and Version needed be
 // given in context as query params. And you can use "doResp" to
-// decide how to process the response when a error happened
-func MainHandler(doErrResp func(c *gin.Context, err error)) func(*gin.Context) {
+// decide how to process the response when a error happened. Param hv is
+// a reflect.Value of function receiver,which actually is a struct.
+func MainHandler(doErrResp func(c *gin.Context, err error), hv reflect.Value) func(*gin.Context) {
 	return func(c *gin.Context) {
 		action, ok := c.GetQuery("Action")
 		if !ok {
@@ -27,8 +23,6 @@ func MainHandler(doErrResp func(c *gin.Context, err error)) func(*gin.Context) {
 			doErrResp(c, errors.New("no version"))
 			c.Abort()
 		}
-		h := Handler{}
-		hv := reflect.ValueOf(h)
 		f := hv.MethodByName(action + version)
 		if !f.IsValid() {
 			doErrResp(c, errors.New("no such api"))
